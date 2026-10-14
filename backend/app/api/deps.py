@@ -38,7 +38,7 @@ def get_current_user(
 
         user_id = int(subject)
 
-    except:
+    except (jwt.PyJWTError, ValueError):
         raise unauthorized
 
     user = db.get(User, user_id)
@@ -47,3 +47,16 @@ def get_current_user(
         raise unauthorized
 
     return user
+
+def require_hr_admin(
+        current_user: Annotated[User, Depends(get_current_user)]
+)-> User:
+
+    if current_user.role!= 'hr_admin':
+        raise HTTPException(
+            status_code= status.HTTP_403_FORBIDDEN,
+            detail = "Hr admin access required"
+        )
+
+    return current_user
+

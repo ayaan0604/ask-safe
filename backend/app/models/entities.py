@@ -50,6 +50,11 @@ class Document(Base):
 
     id : Mapped[int] = mapped_column(primary_key=True)
 
+    filename: Mapped[str] = mapped_column(
+        String(255),
+        nullable = False
+    )
+
     access_level: Mapped[str] = mapped_column(
         String(20), nullable= False
     )
@@ -62,7 +67,7 @@ class Document(Base):
         ForeignKey('users.id'), nullable= False
     )
 
-    reated_at: Mapped[datetime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
         nullable=False,
