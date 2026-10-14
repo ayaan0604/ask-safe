@@ -1,7 +1,7 @@
 from sqlalchemy import text
 
 from app.core.database import Base, engine
-
+from app.models.entities import User, Document, DocumentChunk
 
 def initialize_database():
     with engine.begin() as connection:

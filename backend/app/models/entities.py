@@ -6,7 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from pgvector.sqlalchemy import Vector
 
-from backend.app.core.database import Base
+from app.core.database import Base
 
 
 class User(Base):
