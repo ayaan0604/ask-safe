@@ -17,6 +17,10 @@ class User(Base):
             "role IN ('employee', 'manager', 'hr_admin')",
             name="valid_user_role",
         ),
+        CheckConstraint(
+            "account_status IN ('pending', 'active', 'rejected')",
+            name="valid_account_status",
+        ),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -31,6 +35,12 @@ class User(Base):
 
     role : Mapped[str] = mapped_column(
         String(20), nullable= False
+    )
+
+    account_status: Mapped[str] = mapped_column(
+        String(20),
+        default='active',
+        nullable= False
     )
 
 class Document(Base):

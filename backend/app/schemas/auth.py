@@ -1,5 +1,5 @@
-from pydantic import BaseModel, EmailStr, ConfigDict
-
+from pydantic import BaseModel, EmailStr, ConfigDict, Field
+from typing import Literal
 
 class LoginRequest(BaseModel):
     email: EmailStr
@@ -15,3 +15,17 @@ class CurrentUserResponse(BaseModel):
     role: str
 
     model_config = ConfigDict(from_attributes= True)
+
+class SignUpRequest(BaseModel):
+    email: EmailStr
+    password: str
+    role: Literal['employee', 'manager', 'hr_admin']
+
+class SignupResponse(BaseModel):
+    id : int 
+    email: EmailStr
+    role: str
+    account_status : str 
+    message: str 
+
+    model_config = ConfigDict(from_attributes=True)

@@ -23,3 +23,6 @@ def test_blank_pdf_has_no_extractable_text():
         assert False, "expected extraction to fail"
     except ValueError as e:
         assert "No extractable text" in str(e)
+
+if __name__ == "__main__":
+    test_blank_pdf_has_no_extractable_text()

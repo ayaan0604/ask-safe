@@ -1,11 +1,13 @@
 from pathlib import Path
 from typing import Annotated, Literal
+from pydantic import BaseModel
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
-from sqlalchemy import delete
+from sqlalchemy import delete, func, select
 
 
 from app.api.deps import require_hr_admin
@@ -193,3 +195,51 @@ def delete_document(
         'message' : 'Document deleted successfully',
         'document_id' : document_id
     }
+
+
+class DocumentListResponse(BaseModel):
+    id: int
+    filename: str
+    access_level: str 
+    status: str 
+    uploaded_by: int
+    created_at: datetime
+    chunk_count : int 
+
+@router.get("", response_model=list[DocumentListResponse])
+def list_documents(
+    current_user : Annotated[User, Depends(require_hr_admin)],
+    db : Annotated[Session, Depends(get_db)]
+):
+    stmt = (
+        select(
+            Document.id,
+            Document.filename,
+            Document.access_level,
+            Document.status,
+            Document.uploaded_by,
+            Document.created_at,
+            func.count(DocumentChunk.id).label("chunk_count"),
+        )
+        .outerjoin(
+            DocumentChunk,
+            DocumentChunk.document_id == Document.id
+        )
+        .group_by(Document.id)
+        .order_by(Document.created_at.desc())
+    )
+
+    rows = db.execute(stmt).all()
+
+    return [
+        DocumentListResponse(
+            id=row.id,
+            filename=row.filename,
+            access_level=row.access_level,
+            status=row.status,
+            uploaded_by=row.uploaded_by,
+            created_at=row.created_at,
+            chunk_count=row.chunk_count,
+        )
+        for row in rows
+    ]

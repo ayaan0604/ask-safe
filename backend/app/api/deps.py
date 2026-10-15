@@ -27,6 +27,7 @@ def get_current_user(
     )
 
     if credentials is None:
+        print("credentials none")
         raise unauthorized
 
     try:
@@ -34,16 +35,19 @@ def get_current_user(
         subject = payload.get('sub')
 
         if not isinstance(subject, str) or not subject.isdigit():
+            print("not string or digit sub")
             raise unauthorized
 
         user_id = int(subject)
 
     except (jwt.PyJWTError, ValueError):
+        print("value or jwt error")
         raise unauthorized
 
     user = db.get(User, user_id)
 
-    if user is None:
+    if user is None or user.account_status != "active":
+        print("not active")
         raise unauthorized
 
     return user
