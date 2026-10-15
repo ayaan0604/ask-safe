@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, s
 
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
+from sqlalchemy import delete
 
 
 from app.api.deps import require_hr_admin
@@ -156,3 +157,39 @@ async def upload_document(
         status = document.status,
         chunk_count = len(chunks)
     )
+
+
+@router.delete('/{document_id}')
+def delete_document(
+    document_id: int,
+    current_user: Annotated[User, Depends(require_hr_admin)],
+    db: Annotated[Session, Depends(get_db)]
+):
+
+    document = db.get(Document, document_id)
+
+    if document is None:
+        raise HTTPException(
+            status_code= 404,
+            detail= 'document not found'
+        )
+
+    try:
+        db.execute(
+            delete(DocumentChunk).where(
+                DocumentChunk.document_id == document_id
+            )
+        )
+        db.delete(document)
+        db.commit()
+
+    except SQLAlchemyError as e:
+        raise HTTPException(
+            status_code=500,
+            detail= 'could not delete document'
+        ) from e
+
+    return {
+        'message' : 'Document deleted successfully',
+        'document_id' : document_id
+    }

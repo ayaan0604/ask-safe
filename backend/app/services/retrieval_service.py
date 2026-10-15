@@ -7,7 +7,7 @@ from app.services.embedding_service import embed_texts
 ROLE_ACCESS = {
     'employee' : ['employee'],
     'manager' : ['employee', 'manager'],
-    'hr' : ['employee', 'manager', 'hr']
+    'hr_admin' : ['employee', 'manager', 'hr']
 }
 
 def retrieve_chunks(

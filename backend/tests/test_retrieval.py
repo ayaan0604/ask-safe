@@ -1,29 +1,44 @@
 from app.core.database import SessionLocal
-from app.services.retrieval_service import retrieve_chunks
+from app.services.retrieval_service import retrieve_chunks, ROLE_ACCESS
 
-
+QUESTIONS = [
+    "What are the rules for employee leave?",
+    "How should managers approve team budgets?",
+    "What are the procedures for an internal investigation?",
+    "What are the compensation bands?",
+]
 
 def main():
-    question = "How does the leave policy work?"
-
     with SessionLocal() as db:
-        results = retrieve_chunks(
-            db = db,
-            question= question,
-            user_role='employee',
-            limit= 5
-        )
+        for role, allowed_levels in ROLE_ACCESS.items():
+            print(f"\n{'=' * 55}")
+            print(f"Testing role: {role}")
+            print(f"Allowed access levels: {allowed_levels}")
 
-    print(f"retrieved {len(results)} chunks")
+            for question in QUESTIONS:
+                results = retrieve_chunks(
+                    db=db,
+                    question=question,
+                    user_role=role,
+                    limit=5,
+                )
 
-    for result in results:
-        print("-" * 60)
-        print("Document:", result["filename"])
-        print("Page:", result["page_number"])
-        print("Chunk:", result["chunk_index"])
-        print("Distance:", round(result["cosine_distance"], 4))
-        print("Similarity:", round(result["similarity"], 4))
-        print("Content:", result["content"][:300])
+                returned_levels = {
+                    result["access_level"] for result in results
+                }
 
+                # Security assertion: no unauthorized access level
+                # may appear in the retrieved results.
+                assert returned_levels.issubset(set(allowed_levels)), (
+                    f"ACCESS VIOLATION for {role}! "
+                    f"Returned: {returned_levels}"
+                )
+
+                print(f"\nQuestion: {question}")
+                print(f"Chunks returned: {len(results)}")
+                print(f"Access levels returned: {returned_levels}")
+                print("PASS: all returned chunks are authorized")
+
+    print("\nAll retrieval boundary checks passed!")
 if __name__ == "__main__":
     main()
