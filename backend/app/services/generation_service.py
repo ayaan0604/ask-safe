@@ -49,12 +49,10 @@ def generate_answer(question: str, chunks: list[dict])->str:
                 f"respond exactly with {ABSTENTION_MESSAGE}. "
                 "Cite factual claims using the excerpt numbers, such as "
                 "[1] or [2]. Never cite a number that was not provided. "
-                "Be concise and clear"
-                "Answer in about 3-6 sentences or a few short bullet points. "
                 "Do not write essays, code files, or lengthy reports. "
             ),
             temperature= 0.1,
-            max_output_tokens= 400
+            
         )
     )
 

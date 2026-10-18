@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     gemini_api_key: str
     jwt_secret_key: str
     access_token_expire_minutes: int = 30
+    allowed_origins : str
 
     model_config = SettingsConfigDict(
         env_file=".env",
