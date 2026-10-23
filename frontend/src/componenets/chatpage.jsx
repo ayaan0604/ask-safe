@@ -1,12 +1,77 @@
 import { useState } from "react"
 import "./chat.css"
-import { askQuestion } from "../api"
+import { askQuestion, askQuestionStream } from "../api"
+
+
+const test_messages = [{role: "user", text: "hello"}, {role :"assistant", text: 'hi how are you', sources: [{filename: "file1", page_number: "2"}]}]
 
 export default function ChatPage({user}){
     const [loading, setLoading] = useState(false)
-    const [messages, setMessages] = useState([{role: "user", text: "hello"}, {role :"assistant", text: 'hi', sources: []}])
+    const [messages, setMessages] = useState(test_messages)
     const [question, setQuestion] = useState("")
     const [error, setError] = useState("")
+    const[showSources, setShowSources] = useState(false)
+
+    function handleSourcesClick(event){
+        setShowSources(prev=>(!prev))
+    }
+
+    
+    async function handleSubmitStream(event) {
+        event.preventDefault()
+
+        const text = question.trim()
+        if (!text || loading) return
+
+        const token = sessionStorage.getItem('access_token')
+
+        setMessages(previous => [
+            ...previous,
+            { role: 'user', text },
+            { role: 'assistant', text: '', sources: [] },
+        ])
+
+        setQuestion('')
+        setLoading(true)
+        setError('')
+
+        try {
+            await askQuestionStream(token, text, event => {
+                if (event.type === 'sources') {
+                    setMessages(previous => {
+                        const updated = [...previous]
+                        const last = updated.length - 1
+
+                        updated[last] = {
+                            ...updated[last],
+                            sources: event.sources || [],
+                        }
+
+                        return updated
+                    })
+                }
+
+                if (event.type === 'token') {
+                    setMessages(previous => {
+                        const updated = [...previous]
+                        const last = updated.length - 1
+
+                        updated[last] = {
+                            ...updated[last],
+                            text: updated[last].text + event.text,
+                        }
+
+                        return updated
+                    })
+                }
+            })
+        } catch (e) {
+            setError(e.message)
+        } finally {
+            setLoading(false)
+        }
+    }
+
 
     async function handleSubmit(event) {
         event.preventDefault()
@@ -34,7 +99,7 @@ export default function ChatPage({user}){
                 {
                     role : "assistant",
                     text : result.answer,
-                    sources : result.sources || []
+                    sources : result.sources? result.sources : []
                 }   
             ])
 
@@ -77,17 +142,19 @@ return (
                     <div className="message-content">
                         {message.text}
 
-                        {message.sources?.length>0 && (
+                        {message.text && message.sources?.length>0 && (
                             <div className="message-sources">
-                                <strong>Sources</strong>
-                                {message.sources.map((source, i)=>{
+                                <strong onClick={handleSourcesClick}>
+                                    {showSources?"^" : ">"} Sources
+                                </strong>
+                                {showSources && message.sources.map((source, i)=>(
                                     <p key= {i}>
                                         {source.filename}
                                         {source.page_number != null && 
-                                        `Page: ${source.page_number}`}
+                                        ` Page: ${source.page_number}`}
                                     </p>
 
-                                })}
+                                ))}
                             </div>
                         )}
                     </div>
@@ -109,7 +176,7 @@ return (
         </main>
 
         <form className="chat-input-area"
-            onSubmit={handleSubmit}>
+            onSubmit={handleSubmitStream}>
 
                 <textarea
                     value={question}

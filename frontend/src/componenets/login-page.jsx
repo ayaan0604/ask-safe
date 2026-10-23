@@ -6,14 +6,18 @@ import { login, signup, getMe } from "../api"
 export default function LoginPage({onLogin}){
 
     const[mode, setMode] = useState('login')
+    const[loading, setLoading] = useState(false)
     const[email, setEmail] = useState("")
     const[password, setPassword] = useState("")
     const[role, setRole] = useState("employee")
     const[notice, setNotice] = useState("")
     const[error, setError] = useState("")
+    
 
     async function handleSubmit(event){
         event.preventDefault()
+
+        setLoading(true)
 
         setError('')
 
@@ -50,7 +54,11 @@ export default function LoginPage({onLogin}){
             setError(e.message)
         }
 
+        setLoading(false)
+
     }
+
+   
 
 
     return(
@@ -137,7 +145,7 @@ export default function LoginPage({onLogin}){
                     {notice && <p className="notice">{notice}</p>}
 
                     <div className="login-button">
-                        <button>{mode=='login'? "Login": "Sign Up"}</button>
+                        <button>{mode=='login'?( loading? "Logging in.." : "Login"): ( loading? "Signing up..": "Sign Up")}</button>
                     </div>
                     
                     

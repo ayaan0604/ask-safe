@@ -94,6 +94,10 @@
     margin: 5px 0 0;
 }
 
+.message-sources strong{
+    cursor: pointer;
+}
+
 .chat-input-area {
     display: flex;
     align-items: flex-end;

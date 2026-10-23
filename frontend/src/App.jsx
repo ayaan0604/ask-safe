@@ -17,7 +17,7 @@ export default function App() {
 
   return(
     <div className='app'>
-        {/* <Navbar/> */}
+        { !user && <Navbar/>}
         {user?(
             <ChatPage user={user}/>
           ):(
