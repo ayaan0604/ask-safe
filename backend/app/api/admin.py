@@ -11,7 +11,7 @@ from app.core.database import get_db
 from app.models.entities import User
 
 
-router = APIRouter(prefix = "/api/admin")
+router = APIRouter(prefix = "/api/admin", tags=["Admin"])
 
 class PendingUserResponse(BaseModel):
     id : int

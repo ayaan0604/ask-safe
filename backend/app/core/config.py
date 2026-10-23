@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     jwt_secret_key: str
     access_token_expire_minutes: int = 30
     allowed_origins : str
+    supabase_url : str
+    supabase_service_role_key : str
+    supabase_bucket_name: str
 
     model_config = SettingsConfigDict(
         env_file=".env",

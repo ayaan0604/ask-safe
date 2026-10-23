@@ -2,21 +2,23 @@ from pathlib import Path
 from typing import Annotated, Literal
 from pydantic import BaseModel
 from datetime import datetime
+from uuid import uuid4
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status, Response
 
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from sqlalchemy import delete, func, select
 
 
-from app.api.deps import require_hr_admin
+from app.api.deps import require_hr_admin, get_current_user
 from app.core.database import get_db
 from app.models.entities import User, Document, DocumentChunk
 from app.schemas.documents import DocumentUploadResponse
 from app.services.text_chunker import chunk_pages
 from app.services.pdf_extractor import extract_pages
 from app.services.embedding_service import embed_texts
+from app.services.storage import upload_pdf, delete_pdf, download_pdf
 
 
 
@@ -118,11 +120,24 @@ async def upload_document(
             detail= 'Could not generate document embeddings.'
         ) from e 
 
+    #upload the pdf to bucket
+    storage_path = f'documents/{uuid4().hex}.pdf'
+
+    try:
+        upload_pdf(storage_path, bytes(pdf_bytes))
+    except Exception as e:
+        print("Couldn't upload document: ", e)
+        raise HTTPException(
+            status_code=502,
+            detail= "Couldn't store the original document."
+        ) from e
+
     document = Document(
         filename = filename,
         access_level = access_level,
         status = 'ready',
-        uploaded_by = current_user.id
+        uploaded_by = current_user.id,
+        storage_path = storage_path
     )
 
     try:
@@ -146,6 +161,8 @@ async def upload_document(
 
     except SQLAlchemyError as e:
         db.rollback()
+
+        delete_pdf(storage_path)
 
         raise HTTPException(
             status_code= 500,
@@ -185,6 +202,14 @@ def delete_document(
         db.delete(document)
         db.commit()
 
+        if document.storage_path:
+            try:
+                delete_pdf(document.storage_path)
+            except Exception as e:
+                print("Bucket document Cleanup failed: ", e)
+
+
+
     except SQLAlchemyError as e:
         raise HTTPException(
             status_code=500,
@@ -208,7 +233,7 @@ class DocumentListResponse(BaseModel):
 
 @router.get("", response_model=list[DocumentListResponse])
 def list_documents(
-    current_user : Annotated[User, Depends(require_hr_admin)],
+    current_user : Annotated[User, Depends(get_current_user)],
     db : Annotated[Session, Depends(get_db)]
 ):
     stmt = (
@@ -231,6 +256,15 @@ def list_documents(
 
     rows = db.execute(stmt).all()
 
+    access_levels = {
+        'employee' : {'employee'},
+        'manager' : {'employee', 'manager'},
+        'hr_admin' : {'employee', 'manager', 'hr'},
+    }
+
+    user_role = current_user.role
+    allowed_roles = access_levels.get(user_role, set())
+
     return [
         DocumentListResponse(
             id=row.id,
@@ -241,5 +275,63 @@ def list_documents(
             created_at=row.created_at,
             chunk_count=row.chunk_count,
         )
-        for row in rows
+        for row in rows if row.access_level in allowed_roles 
     ]
+
+@router.get('/{document_id}/download')
+def download_document(
+    document_id : int,
+    current_user : Annotated[User, Depends(get_current_user)],
+    db : Annotated[Session, Depends(get_db)]
+):
+
+    document = db.get(Document, document_id)
+
+    if document is None:
+        print("not in db", id)
+        raise HTTPException(
+            status_code=404,
+            detail="Document not found",
+        )
+
+    if not document.storage_path:
+        print("not on supabase")
+        raise HTTPException(
+            status_code=404,
+            detail="Original PDF is not available",
+        )
+
+    allowed_levels = {
+        'employee' : {'employee'},
+        'manager' : {'employee', 'manager'},
+        'hr_admin' : {'employee', 'manager', 'hr'},
+    }
+
+    user_role = current_user.role
+    permitted_levels = allowed_levels.get(user_role, set())
+
+    if document.access_level not in permitted_levels:
+        print("not permitted")
+        raise HTTPException(
+            status_code=404,
+            detail="Document not found",
+        )
+
+
+    try:
+        pdf_bytes = download_pdf(document.storage_path)
+    except Exception as e:
+        print("Failed to fetch document from bucket ")
+        raise HTTPException(
+            status_code=502,
+            detail="Could not download the document",
+        ) from e
+
+    return Response(
+        content= pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition":
+            f'attachment; filename="{document.filename}"'
+        }
+    )

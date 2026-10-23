@@ -83,6 +83,12 @@ class Document(Base):
         nullable=False,
     )
 
+    storage_path: Mapped[str | None] = mapped_column(
+        String(500),
+        nullable= True,
+        unique=True
+    )
+
 
 class DocumentChunk(Base):
     __tablename__ = "document_chunks"
