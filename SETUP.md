@@ -253,7 +253,55 @@ FastAPI's interactive API documentation is normally available at:
 
 Leave this terminal running.
 
-## 5. Configure the Frontend
+## 5. Initialize Demo Users and Sample Documents
+
+### Seed the Demo Accounts
+
+After configuring your environment and initializing the database schema, run the seed script from the repository root:
+
+```bash
+cd backend
+python -m app.seed
+```
+
+Make sure your backend virtual environment is activated and that the database connection in `backend/.env` is configured correctly.
+
+The script initializes the following demo accounts:
+
+| Role | Email | Password |
+|---|---|---|
+| Employee | `employee@demo.com` | `EmployeeDemo123!` |
+| Manager | `manager@demo.com` | `ManagerDemo123!` |
+| HR Administrator | `hr@demo.com` | `HrAdminDemo123!` |
+
+These accounts are intended for local development and demonstration purposes.
+
+### Upload the Sample Policies
+
+Once the backend and frontend are running:
+
+1. Open the application in your browser.
+2. Log in using the HR administrator credentials: `hr@demo.com` / `HrAdminDemo123!`.
+3. Navigate to the Admin Dashboard.
+4. Open the document management section.
+5. Upload the sample PDFs from the repository's `sample_data/` directory.
+6. Assign the appropriate access level to each document.
+
+After uploading, the application will process the documents for retrieval. Wait for the documents to reach the `ready` status before testing them in chat.
+
+### Try the Role-Based Access Control
+
+Log out and sign in using the different demo accounts to explore Ask Safe's authorization behavior.
+
+- **Employee:** Can access employee-level policies.
+- **Manager:** Can access employee- and manager-level policies.
+- **HR Administrator:** Can access employee-, manager-, and HR-level policies, and manage documents and account approvals.
+
+Try asking the same confidential question under different roles to see how backend-enforced permissions affect the available evidence and the resulting answer.
+
+> **Security warning:** These are public demo credentials, not production credentials. Use them only in a controlled development environment. Never expose a publicly deployed instance with these default accounts and passwords. Change or disable the demo accounts before exposing the
+
+## 6. Configure the Frontend
 
 Open a second terminal and navigate to the frontend directory:
 
@@ -279,7 +327,7 @@ If the file already contains a different variable name or uses an environment va
 
 The frontend's API base URL must match the backend's address and port.
 
-## 6. Start the Frontend
+## 7. Start the Frontend
 
 From the `frontend/` directory, run:
 
@@ -295,7 +343,9 @@ Open that address in your browser.
 
 Keep both the backend and frontend terminals running while using the application.
 
-## 7. Verify the Setup
+
+
+## 8. Verify the Setup
 
 Before testing the complete workflow, confirm the following:
 
@@ -312,6 +362,8 @@ Before testing the complete workflow, confirm the following:
 To test document retrieval, upload a sample policy PDF through the HR administrator dashboard and ask a question whose answer appears in that document.
 
 Use separate accounts for different roles when testing authorization.
+
+
 
 ## Troubleshooting
 
