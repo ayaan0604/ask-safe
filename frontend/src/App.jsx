@@ -1,35 +1,47 @@
-import { useState } from 'react'
-import { login, signup, getMe, askQuestion } from './api'
-import './App.css'
-import Navbar from './componenets/navbar'
-import LoginPage from './componenets/login-page'
-import ChatPage from './componenets/chatpage'
 
+import { useState } from "react";
+import "./App.css";
+import Navbar from "./componenets/navbar";
+import LoginPage from "./componenets/login-page";
+import ChatPage from "./componenets/chatpage";
+import AdminPage from "./componenets/AdminPage";
 
 export default function App() {
+  const [user, setUser] = useState(null);
+  const [view, setView] = useState("chat");
 
-  const [user, setUser] = useState(null)
-
-  function handleLogin(userData){
-    setUser(userData)
+  function handleLogout() {
+    sessionStorage.removeItem("access_token");
+    setUser(null);
+    setView("chat");
   }
-  
 
-  return(
-    <div className='app'>
-        { !user && <Navbar/>}
-        {user?(
-            <ChatPage user={user}/>
-          ):(
-            
-            <div className="login-container">
-              <LoginPage onLogin={handleLogin}/>
-            </div>
-            
-          )
+  function handleLogin(userData) {
+    setUser(userData);
+    setView("chat");
+  }
 
-        }
-        
+  return (
+    <div className="app">
+      {!user && <Navbar />}
+
+      {!user ? (
+        <div className="login-container">
+          <LoginPage onLogin={handleLogin} />
+        </div>
+      ) : view === "admin" ? (
+        <AdminPage
+          user={user}
+          onBackToChat={() => setView("chat")}
+          onLogout={handleLogout}
+        />
+      ) : (
+        <ChatPage
+          user={user}
+          onLogout={handleLogout}
+          onOpenAdmin={() => setView("admin")}
+        />
+      )}
     </div>
-  )
+  );
 }

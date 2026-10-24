@@ -114,7 +114,7 @@ export async function askQuestionStream(token, question, onEvent) {
         if (event.type === 'error') {
             throw new Error(event.message)
         }
-        console.log(event)
+        
         onEvent(event)
     }
 
@@ -142,4 +142,111 @@ export async function askQuestionStream(token, question, onEvent) {
     } finally {
         reader.releaseLock()
     }
+}
+
+
+export async function getAvailableDocuments(token){
+  const response = await fetch(
+    `${API_BASE_URL}/api/documents`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  )
+  const data = await response.json().catch(()=>({}))
+
+  if(!response.ok){
+    throw new Error(data.detail || "Couldn't load documents")
+  }
+  
+  return data
+}
+
+export async function downloadDocument(token, id, filename) {
+
+  const response = await fetch(
+    `${API_BASE_URL}/api/documents/${id}/download`,
+    {
+      headers: {
+        Authorization : `Bearer ${token}`
+      }
+    }
+  )
+
+  
+
+  if(!response.ok){
+    const data = await response.json().catch(() => ({}))
+    throw new Error(data.detail || "Couldn't download document")
+  }
+
+  const blob = await response.blob()
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+
+  URL.revokeObjectURL(url)
+
+}
+
+
+async function adminRequest(path, token, options = {}) {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...options.headers,
+    },
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(data.detail || "Admin request failed");
+  }
+
+  return data;
+}
+
+export function getAdminDocuments(token) {
+  return adminRequest("/api/documents", token);
+}
+
+export function getPendingUsers(token) {
+  return adminRequest("/api/admin/pending-users", token);
+}
+
+export function approveUser(token, userId) {
+  return adminRequest(`/api/admin/users/${userId}/approve`, token, {
+    method: "POST",
+  });
+}
+
+export function rejectUser(token, userId) {
+  return adminRequest(`/api/admin/users/${userId}/reject`, token, {
+    method: "POST",
+  });
+}
+
+export function deleteAdminDocument(token, documentId) {
+  return adminRequest(`/api/documents/${documentId}`, token, {
+    method: "DELETE",
+  });
+}
+
+export function uploadAdminDocument(token, file, accessLevel) {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("access_level", accessLevel);
+
+  return adminRequest("/api/documents/upload", token, {
+    method: "POST",
+    body: formData,
+  });
 }

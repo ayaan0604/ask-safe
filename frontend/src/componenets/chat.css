@@ -1,3 +1,23 @@
+.chat-layout{
+    display: flex;
+    width: 100%;
+    height: 100dvh;
+    overflow: hidden;
+    background: #19191a;
+}
+
+.chat-main{
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    overflow: hidden;
+}
+
+.chat-main .chat-page{
+    width: 100%;
+    height: 100%;
+}
+
 .chat-page{
     height: 100dvh;
     display: flex;
@@ -33,7 +53,7 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
-    padding: 28px max(20px, calc((100%-760px)/2))
+    padding: 28px max(20px, calc((100%-760px) / 2))
 
 }
 
@@ -70,6 +90,8 @@
     line-height: 1.6;
     overflow-wrap: anywhere;
     box-sizing: border-box;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
 }
 
 .message.user .message-content {
@@ -168,4 +190,26 @@
 .chat-error {
     color: #ff9a9a;
     text-align: center;
+}
+
+
+.chat-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.admin-nav-button {
+  padding: 8px 12px;
+  border: 1px solid #514767;
+  border-radius: 8px;
+  background: #29252f;
+  color: #d5c6ff;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.admin-nav-button:hover {
+  background: #383044;
 }
