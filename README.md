@@ -68,7 +68,11 @@ A question about confidential HR information should not produce the same result 
 
 The important distinction is that this is not merely a prompt telling the AI to keep secrets. The application enforces access restrictions before constructing the model's context.
 
-### 5. Admin page to Add, View and Delete Documents
+### 5. Source references to verify the answer
+Every answer lists out the source documents and page numbers referred to build that response
+![Sources](docs/sources.png)
+
+### 6. Admin page to Add, View and Delete Documents
 
 HR administrators can manage the policy library through a dedicated dashboard.
 
@@ -81,7 +85,7 @@ HR administrators can manage the policy library through a dedicated dashboard.
 
 
 
-### 6. And to approve new users
+### 7. And to approve new users
 
 Privileged access should not be granted just because someone selects a role during signup.
 
@@ -90,6 +94,23 @@ Privileged access should not be granted just because someone selects a role duri
 Manager and HR administrator registrations remain pending until an HR administrator approves or rejects the request. The backend uses the account status and authenticated role to control access to protected functionality.
 
 ---
+
+## Try It Yourself
+
+1. Get on the [deployed frontend netlify link](https://ask-safe.netlify.app/)
+2. Login as a demo employee
+  - email: `employee@demo.com`
+  - password: `EmployeeDemo123!`
+3. Ask a normal question like `"What is the employee leave policy?"`
+4. Then ask a confidetial question like `"How do team budgets get approved?"`
+
+Notice the answer that the bot provides.
+
+5. Now logout using the arrow button below and login as a demo manager
+- email : `manager@demo.com`
+- password: `ManagerDemo123!`
+
+6. Ask the same confidential question and notice if it answers this time.
 
 ## Technicalities
 
@@ -208,4 +229,4 @@ It brings together API design, authentication, authorization, relational and vec
 The central idea is simple: **an AI assistant should answer from information the user is allowed to access, not merely information the system happens to possess.**
 
 ### Setup Locally
-Use this comprehensive guide to configure the project and Locally and run it
+Use this [comprehensive guide](SETUP.md) to configure the project and Locally and run it
